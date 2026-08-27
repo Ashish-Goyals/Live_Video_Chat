@@ -17,7 +17,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [isCreating, setIsCreating] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [joinId, setJoindId] = useState('');
+  const [joinId, setJoinId] = useState('');
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -92,7 +92,7 @@ const Dashboard = () => {
                     value={joinId}
                     placeholder="Enter Meeting Code (e.g. abc-def-ghi)"
                     onChange={(e) => {
-                      setJoindId(e.target.value);
+                      setJoinId(e.target.value);
                     }}
                     className="w-full bg-white/75 border border-primary-primary/80 focus:border-primary/60 focus:ring-1 focus:ring-primary/60 rounded-full pl-12 pr-4 py-3.5 text-sm text-slate-800 placeholder-slate-400 outline-none transition-all"
                   />
@@ -123,7 +123,7 @@ const Dashboard = () => {
                 })}
               </h2>
               <p className="font-medium tracking-wider text-primary">
-                {currentTime.toLocaleTimeString(undefined, {
+                {currentTime.toLocaleDateString(undefined, {
                   weekday: 'long',
                   month: 'short',
                   day: 'numeric',

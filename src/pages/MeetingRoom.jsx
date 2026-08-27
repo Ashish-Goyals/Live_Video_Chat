@@ -44,9 +44,9 @@ const MeetingRoom = () => {
     navigate('/dashboard');
   };
   return (
-    <div className="h-screen w-screen bg-slate-100 flex flex-col overflow-hidden retaltive font-sans  ">
+    <div className="h-screen w-screen bg-slate-100 flex flex-col overflow-hidden relative font-sans">
       {/* Top Bar  */}
-      <header className="w-full bg-white/90 backdrop-blur-md px-6 py-3 border-b border-slate-200 flex items-centern justify-between z-30 shadow-xs">
+      <header className="w-full bg-white/90 backdrop-blur-md px-6 py-3 border-b border-slate-200 flex items-center justify-between z-30 shadow-xs">
         <div className="flex items-center gap-3">
           <h2 className="text-base font-semibold text-slate-900 tracking-tight">
             {dummyMeetingDetails.title} (
@@ -100,7 +100,7 @@ const MeetingRoom = () => {
         participantsCount={remoteUsers.length + 1}
         isHost={isHost}
         onLeave={handleLeave}
-        onEndMetting={handleEndMetting}
+        onEndMeeting={handleEndMetting}
       />
     </div>
   );
