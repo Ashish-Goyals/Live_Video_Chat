@@ -49,6 +49,7 @@ const Dashboard = () => {
       toast.error('Please enter a meeting ID');
       return;
     }
+    toast.success('Meeting Joined!');
     navigate(`/meeting/${cleanId}`);
   };
   return (
