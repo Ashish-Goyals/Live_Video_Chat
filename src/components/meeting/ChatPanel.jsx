@@ -31,7 +31,7 @@ const ChatPanel = ({
         </h3>
         <button
           onClick={onClose}
-          className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-900 transiton-colors cursor-pointer"
+          className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors cursor-pointer"
         >
           <XIcon className="h-5 w-5" />
         </button>
@@ -67,7 +67,7 @@ const ChatPanel = ({
                   </span>
                 </div>
                 <div
-                  className={`px-3.5 py-2.5 rounded-2xl max-w-[85%] text-sm leading-relaxed shadow-xs ${isMe ? 'bg-primary text-white rounded-tr-none font-medium' : 'bg-slate-100 text-slate-800 rounded-tl-none border border-slate-200 font-mediu'}`}
+                  className={`px-3.5 py-2.5 rounded-2xl max-w-[85%] text-sm leading-relaxed shadow-xs ${isMe ? 'bg-primary text-white rounded-tr-none font-medium' : 'bg-slate-100 text-slate-800 rounded-tl-none border border-slate-200 font-medium'}`}
                 >
                   {msg.text}
                 </div>

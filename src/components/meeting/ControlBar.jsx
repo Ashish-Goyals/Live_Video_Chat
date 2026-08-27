@@ -25,7 +25,7 @@ const ControlBar = ({
   participantsCount,
   isHost,
   onLeave,
-  onEndMetting,
+  onEndMeeting,
 }) => {
   const [copied, setCopied] = useState(false);
   const copyMeetingId = () => {
@@ -82,7 +82,7 @@ const ControlBar = ({
         {/* Chat Toggle  */}
         <button
           onClick={onToggleChat}
-          className={`p-3.5 rounded-2xl transition-all cursor-pointer border ${isChatOpen ? 'bg-primary text-white border-primary shadow-md shadow-primary/20  ' : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 shadow-xs'}`}
+          className={`relative p-3.5 rounded-2xl transition-all cursor-pointer border ${isChatOpen ? 'bg-primary text-white border-primary shadow-md shadow-primary/20  ' : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 shadow-xs'}`}
           title="Toggle IN-Meeting Chat"
         >
           <MessageSquareIcon className="w-5 h-5" />
@@ -106,9 +106,9 @@ const ControlBar = ({
         </button>
 
         {/* Leave / End meeting  */}
-        {!isHost ? (
+        {isHost ? (
           <button
-            onClick={onEndMetting}
+            onClick={onEndMeeting}
             className="p-3.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/25 transition-all cursor-pointer border border-red-500 ml-2 font-medium text-xs flex items-center gap-1.5 "
             title="End Meeting For all"
           >
