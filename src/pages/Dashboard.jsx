@@ -8,9 +8,10 @@ import {
 import { dummyStats, dummyUser } from '../assets/asset';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { useUser } from '@clerk/react';
 const Dashboard = () => {
   const stats = dummyStats;
-  const user = dummyUser;
+  const { user } = useUser();
   const userName = user?.fullName || user?.firstName || 'User';
   const userEmail =
     user?.primaryEmailAddress?.emailAddress || 'user@example.com';

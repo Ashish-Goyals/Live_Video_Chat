@@ -2,9 +2,9 @@ import React from 'react';
 import { dummyUser } from '../assets/asset';
 import { useLocation, Link } from 'react-router-dom';
 import { LayoutDashboard, HistoryIcon, AstroidIcon } from 'lucide-react';
-import { UserButton } from '@clerk/react';
+import { UserButton, useUser } from '@clerk/react';
 const Navbar = () => {
-  const { isSignedIn, user } = { user: dummyUser, isSignedIn: true };
+  const { isSignedIn, user } = useUser();
   const location = useLocation();
   const userName =
     user?.fullName ||
