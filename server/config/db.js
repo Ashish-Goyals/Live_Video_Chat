@@ -1,7 +1,7 @@
-import { neon } from "@neondatabase/serverless";
+import { neon } from '@neondatabase/serverless';
 
 if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is not defined");
+  throw new Error('DATABASE_URL is not defined');
 }
 
 export const sql = neon(process.env.DATABASE_URL);
@@ -55,7 +55,7 @@ export async function initDB() {
             );
         `;
   } catch (error) {
-    console.error("Error initializing database tables:", error);
+    console.error('Error initializing database tables:', error);
     throw error;
   }
 }

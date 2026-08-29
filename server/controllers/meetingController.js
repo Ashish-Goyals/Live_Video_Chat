@@ -1,13 +1,10 @@
 // Create Meeting
-import { sql } from "../config/db.js";
+import { sql } from '../config/db.js';
 
 const generateMeetingId = () => {
-  const chars = "abcdefghijklmnopqrstuvwxyz";
+  const chars = 'abcdefghijklmnopqrstuvwxyz';
   const segment = (len) =>
-    Array.from(
-      { length: len },
-      () => chars[Math.floor(Math.random() * chars.length)],
-    ).join("");
+    Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
   return `${segment(3)}-${segment(3)}-${segment(3)}`;
 };
 
@@ -18,20 +15,19 @@ export const createMeeting = async (req, res) => {
     // Fetch user details and plans
 
     const users = await sql`SELECT name,plan FROM users WHERE id = ${userId}`;
-    const userPlan = users[0]?.plan || "free";
+    const userPlan = users[0]?.plan || 'free';
 
     // Checking meetings limit per calendar month
-    if (userPlan === "free") {
-      const monthlyCountResult =
-        await sql`SELECT COUNT(*) as count FROM meetings
+    if (userPlan === 'free') {
+      const monthlyCountResult = await sql`SELECT COUNT(*) as count FROM meetings
         WHERE host_id = ${userId} AND created_at >= date_trunc('month', NOW())`;
 
-      const monthlyCount = parseInt(monthlyCountResult[0]?.count || "0");
+      const monthlyCount = parseInt(monthlyCountResult[0]?.count || '0');
 
       if (monthlyCount >= 30) {
         return res.status(403).json({
           error:
-            "Monthly meeting limit exceeded for free plan.Please Upgrade to premium for unlimited meetings!",
+            'Monthly meeting limit exceeded for free plan.Please Upgrade to premium for unlimited meetings!',
           limitReached: true,
           monthlyCount,
           limit: 30,
@@ -41,19 +37,16 @@ export const createMeeting = async (req, res) => {
     let meetingId = generateMeetingId();
 
     // Ensure meeting Id
-    let existing =
-      await sql`SELECT id FROM meetings WHERE meeting_id = ${meetingId}`;
+    let existing = await sql`SELECT id FROM meetings WHERE meeting_id = ${meetingId}`;
     while (existing.length > 0) {
       meetingId = generateMeetingId();
-      existing =
-        await sql`SELECT id FROM meetings WHERE meeting_id = ${meetingId}`;
+      existing = await sql`SELECT id FROM meetings WHERE meeting_id = ${meetingId}`;
     }
-    const [meeting] =
-      await sql`INSERT INTO meetings(meeting_id,title,host_id,status)
-    VALUES (${meetingId}, ${title || "Instant Meeting"}, ${userId}, 'active')
+    const [meeting] = await sql`INSERT INTO meetings(meeting_id,title,host_id,status)
+    VALUES (${meetingId}, ${title || 'Instant Meeting'}, ${userId}, 'active')
     RETURNING id,meeting_id,title,host_id,status,created_at`;
 
-    const hostName = users[0]?.name || "Host";
+    const hostName = users[0]?.name || 'Host';
 
     // Insert host into participants
 
@@ -83,11 +76,11 @@ export const getMeetingById = async (req, res) => {
     const meetings =
       await sql`SELECT m.*, u.id as host_user_id, u.name as host_name, u.email as host_email FROM meetings m JOIN users u ON m.host_id = u.id WHERE m.meeting_id = ${meetingId}`;
     if (meetings.length === 0) {
-      return res.status(404).json({ error: "Meeting Not Found" });
+      return res.status(404).json({ error: 'Meeting Not Found' });
     }
     const meeting = meetings[0];
-    if (meeting.status === "ended") {
-      return res.status(400).json({ error: "This meeting has ended!" });
+    if (meeting.status === 'ended') {
+      return res.status(400).json({ error: 'This meeting has ended!' });
     }
     res.json({
       meeting: {
@@ -156,7 +149,7 @@ export const getUserSessions = async (req, res) => {
             timestamp: msg.timestamp,
           })),
         };
-      }),
+      })
     );
 
     res.json({ meetings: formattedMeeting });
@@ -173,7 +166,7 @@ export const getSessionDetails = async (req, res) => {
     const meetings =
       await sql`SELECT m.*,u.id AS host_user_id, u.name AS host_name, u.email AS host_email FROM meetings m JOIN users u ON m.host_id = u.id WHERE m.meeting_id = ${id}`;
     if (meetings.length === 0) {
-      return res.status(404).json({ error: "Session Details not found" });
+      return res.status(404).json({ error: 'Session Details not found' });
     }
     const m = meetings[0];
     const participants =
@@ -218,17 +211,17 @@ export const getMeetingStats = async (req, res) => {
   try {
     const userId = req.user.id;
     const users = await sql`SELECT plan FROM users WHERE id = ${userId}`;
-    const plan = users[0]?.plan || "free";
+    const plan = users[0]?.plan || 'free';
     const monthlyCountResult = await sql`SELECT COUNT(*) as count FROM meetings
         WHERE host_id = ${userId} AND created_at >= date_trunc('month', NOW())`;
-    const monthlyCount = parseInt(monthlyCountResult[0]?.count || "0");
-    const monthlyLimit = plan === "premium" ? null : 30;
+    const monthlyCount = parseInt(monthlyCountResult[0]?.count || '0');
+    const monthlyLimit = plan === 'premium' ? null : 30;
 
     res.json({
       plan,
       monthlyCount,
       monthlyLimit,
-      maxParticipants: plan === "premium" ? 100 : 10,
+      maxParticipants: plan === 'premium' ? 100 : 10,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
