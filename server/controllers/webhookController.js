@@ -1,5 +1,5 @@
-import { verifyWebhook } from "@clerk/express/webhooks";
-import { sql } from "../config/db.js";
+import { verifyWebhook } from '@clerk/express/webhooks';
+import { sql } from '../config/db.js';
 
 export const handleClerkWebhook = async (req, res) => {
   try {
@@ -8,12 +8,12 @@ export const handleClerkWebhook = async (req, res) => {
     const data = evt.data;
 
     switch (eventType) {
-      case "user.created": {
+      case 'user.created': {
         const userId = data.id;
-        const primaryEmail = data.email_addresses?.[0]?.email_address || "";
-        const name = `${data.first_name || "User"} ${data.last_name}`;
-        const image = data.image_url || "";
-        const plan = "free";
+        const primaryEmail = data.email_addresses?.[0]?.email_address || '';
+        const name = `${data.first_name || 'User'} ${data.last_name}`;
+        const image = data.image_url || '';
+        const plan = 'free';
 
         await sql`
         INSERT INTO users (id, email, name, image, plan)
@@ -27,11 +27,11 @@ export const handleClerkWebhook = async (req, res) => {
         updated_at = NOW()`;
       }
 
-      case "user.updated": {
+      case 'user.updated': {
         const userId = data.id;
-        const primaryEmail = data.email_addresses?.[0]?.email_address || "";
-        const name = `${data.first_name || "User"} ${data.last_name}`;
-        const image = data.image_url || "";
+        const primaryEmail = data.email_addresses?.[0]?.email_address || '';
+        const name = `${data.first_name || 'User'} ${data.last_name}`;
+        const image = data.image_url || '';
 
         await sql`
         INSERT INTO users (id, email, name, image)
@@ -44,7 +44,7 @@ export const handleClerkWebhook = async (req, res) => {
         updated_at = NOW()`;
         break;
       }
-      case "user.deleted": {
+      case 'user.deleted': {
         const userId = data.id;
         if (userId) {
           await sql`DELETE FROM users WHERE id = ${userId}`;
@@ -57,9 +57,9 @@ export const handleClerkWebhook = async (req, res) => {
     }
     return res.status(200).json({ success: true, eventType });
   } catch (error) {
-    console.error("Error verifying Clerk Webhook:", error.message || error);
+    console.error('Error verifying Clerk Webhook:', error.message || error);
     return res.status(500).json({
-      error: "Webhook verification failed" + (errors.message || error),
+      error: 'Webhook verification failed' + (errors.message || error),
     });
   }
 };
