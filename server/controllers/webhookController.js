@@ -3,7 +3,7 @@ import { sql } from '../config/db.js';
 
 export const handleClerkWebhook = async (req, res) => {
   try {
-    const evt = await verifyWebhook(res);
+    const evt = await verifyWebhook(req);
     const eventType = evt.type;
     const data = evt.data;
 
@@ -21,10 +21,12 @@ export const handleClerkWebhook = async (req, res) => {
         )
         ON CONFLICT (id) DO UPDATE SET
         id = EXCLUDED.id,
+        email=COALESCE(NULLIF(EXCLUDED.email,''),users.email),
         name = EXCLUDED.name,
         image = EXCLUDED.image,
         plan = EXCLUDED.plan,
         updated_at = NOW()`;
+        break;
       }
 
       case 'user.updated': {
@@ -59,7 +61,7 @@ export const handleClerkWebhook = async (req, res) => {
   } catch (error) {
     console.error('Error verifying Clerk Webhook:', error.message || error);
     return res.status(500).json({
-      error: 'Webhook verification failed' + (errors.message || error),
+      error: 'Webhook verification failed: ' + (error.message || error),
     });
   }
 };

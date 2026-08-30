@@ -10,9 +10,9 @@ import {
 const meetingRouter = express.Router();
 
 meetingRouter.post('/', protect, createMeeting);
-meetingRouter.post('/stats', protect, getMeetingStats);
-meetingRouter.post('/sessions', protect, getUserSessions);
-meetingRouter.post('/sessions/:id', protect, getSessionDetails);
-meetingRouter.post('/meetingId', protect, getMeetingById);
+meetingRouter.get('/stats', protect, getMeetingStats);
+meetingRouter.get('/sessions', protect, getUserSessions);
+meetingRouter.get('/sessions/:id', protect, getSessionDetails);
+meetingRouter.get('/:meetingId', protect, getMeetingById);
 
 export default meetingRouter;

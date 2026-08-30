@@ -164,7 +164,7 @@ export const getSessionDetails = async (req, res) => {
   try {
     const { id } = req.params;
     const meetings =
-      await sql`SELECT m.*,u.id AS host_user_id, u.name AS host_name, u.email AS host_email FROM meetings m JOIN users u ON m.host_id = u.id WHERE m.meeting_id = ${id}`;
+      await sql`SELECT m.*,u.id AS host_user_id, u.name AS host_name, u.email AS host_email FROM meetings m JOIN users u ON m.host_id = u.id WHERE m.id = ${id}`;
     if (meetings.length === 0) {
       return res.status(404).json({ error: 'Session Details not found' });
     }

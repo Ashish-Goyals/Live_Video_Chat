@@ -8,7 +8,7 @@ export function setupSocketIO(io) {
     let currentUser = null;
 
     // User joins a meeting room
-    socket.on('join-room', async (roomId, user, audioEnabled = true, videoEnabled = true) => {
+    socket.on('join-room', async ({ roomId, user, audioEnabled = true, videoEnabled = true }) => {
       try {
         // Verify meeting status from DB
         const meetings = await sql`SELECT * FROM meetings WHERE meeting_id = ${roomId}`;
@@ -36,20 +36,20 @@ export function setupSocketIO(io) {
           videoEnabled,
         };
 
-        if (!room.has(roomId)) {
+        if (!rooms.has(roomId)) {
           rooms.set(roomId, new Map());
         }
         const roomParticipants = rooms.get(roomId);
 
-        // Fetch host plan to enforce participant linits (10 for Free, 100 for premium)
+        // Fetch host plan to enforce participant limits (10 for Free, 100 for premium)
 
-        const hosts = await sql`SELECT plan FROM users WHERE id = ${meting.host_id}`;
+        const hosts = await sql`SELECT plan FROM users WHERE id = ${meeting.host_id}`;
         const hostPlan = hosts[0]?.plan || 'free';
         const maxParticipants = hostPlan === 'premium' ? 100 : 10;
 
         if (roomParticipants.size >= maxParticipants && !isHost) {
           socket.emit('meeting-ended', {
-            message: `Meeting capacuty limit reached (max ${maxParticipants} participants for ${hostPlan.toUpperCase()} plan). Host must upgrade to premium for up to 100 participants !`,
+            message: `Meeting capacity limit reached (max ${maxParticipants} participants for ${hostPlan.toUpperCase()} plan). Host must upgrade to premium for up to 100 participants !`,
           });
           return;
         }
@@ -62,13 +62,13 @@ export function setupSocketIO(io) {
         // Add new participant to socket state
         roomParticipants.set(socket.id, currentUser);
 
-        // Save participant into DB if not allready present
+        // Save participant into DB if not already present
 
         const userId = user?.id || null;
         const existingParticipants =
-          await sql`SELECT id FROM meeting_participants WHERE meeting_id = ${meeting.id} AND ((${uerId}::text IS NOT NULL AND user_id = ${userId}) OR name = ${currentUser.name})`;
+          await sql`SELECT id FROM meeting_participants WHERE meeting_id = ${meeting.id} AND ((${userId}::text IS NOT NULL AND user_id = ${userId}) OR name = ${currentUser.name})`;
         if (existingParticipants.length === 0) {
-          await sql`INSERT INTO meeting_participants (meeting_id,user_id,name,joined_at) VALUES (${meeting.id},${userId},${currentUser.userName}, NOW())`;
+          await sql`INSERT INTO meeting_participants (meeting_id,user_id,name,joined_at) VALUES (${meeting.id},${userId},${currentUser.name}, NOW())`;
         }
 
         // Send list of existing user to the newComer
@@ -78,13 +78,12 @@ export function setupSocketIO(io) {
 
         socket.to(roomId).emit('user-joined', currentUser);
       } catch (error) {
-        console.error('Error joing room in socket : ', error);
-        socket.emit('meeting-ended', { message: 'Filed to join room .' });
+        console.error('Error joining room in socket : ', error);
+        socket.emit('meeting-ended', { message: 'Failed to join room.' });
       }
     });
 
     // WebRTC signaling offer
-
     // Send the information needed to start the connection
 
     socket.on('offer', ({ targetSocketId, callerSocketId, sdp }) => {
@@ -94,16 +93,17 @@ export function setupSocketIO(io) {
         callerUser: currentUser,
       });
     });
-    //    WebRTC Signaling answer
 
+    // WebRTC Signaling answer
     // Accept the offer request and process the connection
 
-    socket.on('offer', ({ targetSocketId, responderSocketId, sdp }) => {
+    socket.on('answer', ({ targetSocketId, responderSocketId, sdp }) => {
       io.to(targetSocketId).emit('answer', {
         responderSocketId,
         sdp,
       });
     });
+
     // WebRTC Signaling : ICE candidate
     // passes the connection details from one user to the other so WebRTC can figure out how to connect them directly
 
@@ -113,6 +113,7 @@ export function setupSocketIO(io) {
         candidate,
       });
     });
+
     // Audio toggle event
     socket.on('toggle-audio', ({ roomId, audioEnabled }) => {
       if (rooms.has(roomId) && rooms.get(roomId).has(socket.id)) {
@@ -123,6 +124,7 @@ export function setupSocketIO(io) {
         audioEnabled,
       });
     });
+
     // Video toggle event
     socket.on('toggle-video', ({ roomId, videoEnabled }) => {
       if (rooms.has(roomId) && rooms.get(roomId).has(socket.id)) {
@@ -133,6 +135,7 @@ export function setupSocketIO(io) {
         videoEnabled,
       });
     });
+
     // Chat message event -> persist to DB & broadcast
 
     socket.on('send-message', async ({ roomId, message }) => {
@@ -152,40 +155,37 @@ export function setupSocketIO(io) {
         console.error('Error saving chat message to DB : ', error);
       }
     });
-    // Host explicitly ends meeting for all via End Meeeting button
+
+    // Host explicitly ends meeting for all via End Meeting button
     socket.on('end-meeting', async ({ roomId }) => {
       try {
-        const meetings =
-          await sql`UPDATE meetings SET status = 'ended', ended_at = NOW() WHERE meeting_id = ${roomId}`;
-        io.on(roomId).emit('meeting-ended', {
-          message: 'Meeting has been ended by the host',
-        });
+        await sql`UPDATE meetings SET status = 'ended', ended_at = NOW() WHERE meeting_id = ${roomId}`;
+        io.to(roomId).emit('meeting-ended', { message: 'Meeting has been ended by the host' });
         rooms.delete(roomId);
       } catch (error) {
         console.error('Error ending meeting : ', error);
       }
+    });
 
-      // Handle Disconnect (reloading window,netowrk drop ,or closing tab )
-      socket.on('disconnect', async ({ roomId }) => {
-        try {
-          if (currentRoomId && rooms.has(currentRoomId)) {
-            const roomParticipants = rooms.get(currentRoomId);
-            roomParticipants.delete(socket.id);
+    // Handle Disconnect (reloading window, network drop, or closing tab)
+    socket.on('disconnect', async () => {
+      try {
+        if (currentRoomId && rooms.has(currentRoomId)) {
+          const roomParticipants = rooms.get(currentRoomId);
+          roomParticipants.delete(socket.id);
 
-            if (roomParticipants.size === 0) {
-              rooms.delete(currentRoomId);
-            } else {
-              // Notify remaining peers that a user disconnected
-              socket.to(currentRoomId).emit('user-left', {
-                socketId: socket.id,
-                user: currentUser,
-              });
-            }
+          if (roomParticipants.size === 0) {
+            rooms.delete(currentRoomId);
+          } else {
+            socket.to(currentRoomId).emit('user-left', {
+              socketId: socket.id,
+              user: currentUser,
+            });
           }
-        } catch (error) {
-          console.error('Error handling user leave : ', error);
         }
-      });
+      } catch (error) {
+        console.error('Error handling user leave : ', error);
+      }
     });
   });
 }
