@@ -10,11 +10,16 @@ import {
   MessageSquareIcon,
   PhoneOffIcon,
   UserIcon,
+  LockIcon,
+  MonitorUpIcon,
+  MonitorXIcon,
 } from 'lucide-react';
 const ControlBar = ({
   roomId,
   audioEnabled,
   videoEnabled,
+  audioLocked,
+  videoLocked,
   onToggleAudio,
   onToggleVideo,
   onToggleChat,
@@ -26,6 +31,8 @@ const ControlBar = ({
   isHost,
   onLeave,
   onEndMeeting,
+  isScreenSharing,
+  onToggleScreenShare,
 }) => {
   const [copied, setCopied] = useState(false);
   const copyMeetingId = () => {
@@ -35,7 +42,7 @@ const ControlBar = ({
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <footer className="w-full bg-white/90 backdrop-blur-md border-t border-slate-200/80 px-6 py-4 flex items-center justify-between z-40 shadow-lg shadow-slate-200/50 ">
+    <footer className="w-full bg-white/90 backdrop-blur-md border-t border-slate-200/80 px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between z-40 shadow-lg shadow-slate-200/50">
       {/* Left Info / Copy Link  */}
       <div className="hidden sm:flex items-center gap-3">
         <span className="text-xs font-medium text-slate-600 font-mono tracking-wider">
@@ -54,35 +61,65 @@ const ControlBar = ({
         </button>
       </div>
       {/* Center Controls  */}
-      <div className="flex items-center gap-3 mx-auto sm:mx-0 ">
-        {/* Audio Togle  */}
+      <div className="flex items-center gap-2 sm:gap-3 mx-auto sm:mx-0">
+        {/* Audio Toggle */}
         <button
           onClick={onToggleAudio}
-          className={`p-3.5 rounded-2xl transition-all cursor-pointer border ${audioEnabled ? 'bg-slate-100 hover-bg-slate-200 text-slate-800 border-slate-300 shadow-xs' : 'bg-rose-50 hiver-bg-rose-100 text-rose-600 border-rose-200 shdaow-xs'}`}
-          title={audioEnabled ? 'Mute Microphone' : 'Unmute Microphone'}
+          className={`relative p-3.5 rounded-2xl transition-all cursor-pointer border ${audioEnabled ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 shadow-xs' : 'bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200 shadow-xs'}`}
+          title={
+            audioLocked
+              ? 'Muted by host — click to request permission'
+              : audioEnabled
+                ? 'Mute Microphone'
+                : 'Unmute Microphone'
+          }
         >
           {audioEnabled ? (
             <MicIcon className="w-5 h-5" />
           ) : (
             <MicOffIcon className="w-5 h-5" />
           )}
+          {audioLocked && (
+            <LockIcon className="w-3 h-3 absolute -top-1 -right-1 bg-slate-900 text-white rounded-full p-0.5" />
+          )}
         </button>
-        {/* Video Togle  */}
+        {/* Video Toggle */}
         <button
           onClick={onToggleVideo}
-          className={`p-3.5 rounded-2xl transition-all cursor-pointer border ${videoEnabled ? 'bg-slate-100 hover-bg-slate-200 text-slate-800 border-slate-300 shadow-xs' : 'bg-rose-50 hiver-bg-rose-100 text-rose-600 border-rose-200 shdaow-xs'}`}
-          title={videoEnabled ? 'Turn Off camera' : 'Turn On camera'}
+          className={`relative p-3.5 rounded-2xl transition-all cursor-pointer border ${videoEnabled ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 shadow-xs' : 'bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200 shadow-xs'}`}
+          title={
+            videoLocked
+              ? 'Disabled by host — click to request permission'
+              : videoEnabled
+                ? 'Turn Off camera'
+                : 'Turn On camera'
+          }
         >
           {videoEnabled ? (
             <VideoIcon className="w-5 h-5" />
           ) : (
             <VideoOffIcon className="w-5 h-5" />
           )}
+          {videoLocked && (
+            <LockIcon className="w-3 h-3 absolute -top-1 -right-1 bg-slate-900 text-white rounded-full p-0.5" />
+          )}
+        </button>
+        {/* Screen Share Toggle */}
+        <button
+          onClick={onToggleScreenShare}
+          className={`relative p-2.5 sm:p-3.5 rounded-2xl transition-all cursor-pointer border ${isScreenSharing ? 'bg-primary text-white border-primary shadow-md shadow-primary/20' : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 shadow-xs'}`}
+          title={isScreenSharing ? 'Stop Screen Share' : 'Share Screen'}
+        >
+          {isScreenSharing ? (
+            <MonitorXIcon className="w-5 h-5" />
+          ) : (
+            <MonitorUpIcon className="w-5 h-5" />
+          )}
         </button>
         {/* Chat Toggle  */}
         <button
           onClick={onToggleChat}
-          className={`relative p-3.5 rounded-2xl transition-all cursor-pointer border ${isChatOpen ? 'bg-primary text-white border-primary shadow-md shadow-primary/20  ' : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 shadow-xs'}`}
+          className={`relative p-2.5 sm:p-3.5 rounded-2xl transition-all cursor-pointer border ${isChatOpen ? 'bg-primary text-white border-primary shadow-md shadow-primary/20' : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 shadow-xs'}`}
           title="Toggle IN-Meeting Chat"
         >
           <MessageSquareIcon className="w-5 h-5" />
@@ -95,7 +132,7 @@ const ControlBar = ({
         {/* participants toggle  */}
         <button
           onClick={onToggleParticipants}
-          className={`relative p-3.5 rounded-2xl transition-all cursor-pointer border ${isParticipantsOpen ? 'bg-primary text-white border-primary shadow-md shadow-primary/20  ' : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 shadow-xs'}`}
+          className={`relative p-2.5 sm:p-3.5 rounded-2xl transition-all cursor-pointer border ${isParticipantsOpen ? 'bg-primary text-white border-primary shadow-md shadow-primary/20' : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 shadow-xs'}`}
           title="Toggle Participants List"
         >
           <UserIcon className="w-5 h-5" />
@@ -109,7 +146,7 @@ const ControlBar = ({
         {isHost ? (
           <button
             onClick={onEndMeeting}
-            className="p-3.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/25 transition-all cursor-pointer border border-red-500 ml-2 font-medium text-xs flex items-center gap-1.5 "
+            className="p-2.5 sm:p-3.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/25 transition-all cursor-pointer border border-red-500 ml-1 sm:ml-2 font-medium text-xs flex items-center gap-1.5"
             title="End Meeting For all"
           >
             <PhoneOffIcon className="w-5 h-5" />
@@ -118,7 +155,7 @@ const ControlBar = ({
         ) : (
           <button
             onClick={onLeave}
-            className="p-3.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/25 transition-all cursor-pointer border border-red-500 ml-2"
+            className="p-2.5 sm:p-3.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/25 transition-all cursor-pointer border border-red-500 ml-1 sm:ml-2"
             title="Leave Meeting"
           >
             <PhoneOffIcon className="w-5 h-5" />

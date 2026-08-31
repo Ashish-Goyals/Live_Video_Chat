@@ -5,7 +5,7 @@ const SessionParticipants = ({ participants = [], host }) => {
   if (participants.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-slate-400 text-sm py-12">
-        <UserIcon classname="w-8 h-8 mb-2 text-slate-300" />
+        <UserIcon className="w-8 h-8 mb-2 text-slate-300" />{' '}
         <p>No participants log recorded.</p>
       </div>
     );

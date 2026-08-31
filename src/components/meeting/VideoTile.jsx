@@ -1,11 +1,17 @@
-import React, { useRef, useEffect } from 'react';
-import { UserIcon, VideoOffIcon, MicOffIcon } from 'lucide-react';
+import { useRef, useEffect } from 'react';
+import {
+  UserIcon,
+  VideoOffIcon,
+  MicOffIcon,
+  MonitorUpIcon,
+} from 'lucide-react';
 const VideoTile = ({
   stream,
   name,
   isLocal = false,
   audioEnabled = true,
   videoEnabled = true,
+  isScreenSharing = false,
 }) => {
   const videoRef = useRef(null);
   useEffect(() => {
@@ -21,7 +27,7 @@ const VideoTile = ({
         autoPlay
         playsInline
         muted={isLocal}
-        className={`w-full h-full object-cover transition-opacity duration-300 ${videoEnabled ? 'opacity-100' : 'opacity-0 pointer-events-none absolute'} ${isLocal ? '-scale-x-100' : ''}`}
+        className={`w-full h-full ${isScreenSharing ? 'object-contain bg-black' : 'object-cover'} transition-opacity duration-300 ${videoEnabled ? 'opacity-100' : 'opacity-0 pointer-events-none absolute'} ${isLocal && !isScreenSharing ? '-scale-x-100' : ''}`}
       />
       {/* Camera Off Placeholder  */}
       {!videoEnabled && (
@@ -47,6 +53,12 @@ const VideoTile = ({
             </span>
           )}
         </div>
+        {isScreenSharing && (
+          <div className="flex items-center gap-1 bg-primary/90 backdrop-blur-md px-2.5 py-1 rounded-xl text-[11px] font-semibold text-white shadow-md">
+            <MonitorUpIcon className="w-3 h-3" />
+            <span>Presenting</span>
+          </div>
+        )}
       </div>
     </div>
   );

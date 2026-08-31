@@ -6,6 +6,8 @@ import {
   VideoIcon,
   VideoOffIcon,
   XIcon,
+  UserMinusIcon,
+  LockIcon,
 } from 'lucide-react';
 
 const ParticipantList = ({
@@ -16,6 +18,10 @@ const ParticipantList = ({
   localVideo,
   remoteUsers,
   meetingHostId,
+  isHost = false,
+  onSetAudioAccess,
+  onSetVideoAccess,
+  onRemove,
 }) => {
   if (!isOpen) return null;
 
@@ -27,6 +33,8 @@ const ParticipantList = ({
       isLocal: true,
       audioEnabled: localAudio,
       videoEnabled: localVideo,
+      audioLocked: false,
+      videoLocked: false,
     },
     ...remoteUsers,
   ];
@@ -48,38 +56,99 @@ const ParticipantList = ({
       {/* List */}
       <div className="flex-1 p-4 overflow-y-auto space-y-3">
         {allParticipants.map((p) => {
-          const isHost = meetingHostId && p.userId === meetingHostId;
+          const participantIsHost = meetingHostId && p.userId === meetingHostId;
+          const showHostControls = isHost && !p.isLocal;
           return (
             <div
               key={p.socketId || p.userId}
               className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-primary-light border border-primary-border text-primary font-bold flex items-center justify-center text-sm shadow-xs">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-full bg-primary-light border border-primary-border text-primary font-bold flex items-center justify-center text-sm shadow-xs shrink-0">
                   {p.userName.charAt(0).toUpperCase()}
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-slate-800 flex items-center gap-1.5">
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-medium text-slate-800 flex items-center gap-1.5 truncate">
                     {p.userName}
-                    {isHost && (
+                    {participantIsHost && (
                       <CrownIcon
-                        className="w-3.5 h-3.5 text-amber-500"
+                        className="w-3.5 h-3.5 text-amber-500 shrink-0"
                         title="Host"
                       />
                     )}
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-slate-500">
-                {p.audioEnabled ? (
-                  <MicIcon className="h-4 w-4 text-slate-600" />
+              <div className="flex items-center gap-1.5 text-slate-500 shrink-0">
+                {showHostControls ? (
+                  <>
+                    <button
+                      onClick={() =>
+                        onSetAudioAccess(p.socketId, !!p.audioLocked)
+                      }
+                      title={
+                        p.audioLocked
+                          ? 'Unblock microphone'
+                          : 'Block microphone'
+                      }
+                      className="relative p-1.5 rounded-lg hover:bg-slate-200 cursor-pointer transition-all"
+                    >
+                      {p.audioEnabled ? (
+                        <MicIcon className="h-4 w-4 text-slate-600" />
+                      ) : (
+                        <MicOffIcon className="h-4 w-4 text-rose-500" />
+                      )}
+                      {p.audioLocked && (
+                        <LockIcon className="w-2.5 h-2.5 absolute -top-1 -right-1 bg-slate-900 text-white rounded-full p-0.5" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() =>
+                        onSetVideoAccess(p.socketId, !!p.videoLocked)
+                      }
+                      title={p.videoLocked ? 'Unblock camera' : 'Block camera'}
+                      className="relative p-1.5 rounded-lg hover:bg-slate-200 cursor-pointer transition-all"
+                    >
+                      {p.videoEnabled ? (
+                        <VideoIcon className="h-4 w-4 text-slate-600" />
+                      ) : (
+                        <VideoOffIcon className="h-4 w-4 text-rose-500" />
+                      )}
+                      {p.videoLocked && (
+                        <LockIcon className="w-2.5 h-2.5 absolute -top-1 -right-1 bg-slate-900 text-white rounded-full p-0.5" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => onRemove(p.socketId)}
+                      title="Remove from meeting"
+                      className="p-1.5 rounded-lg hover:bg-rose-100 text-rose-600 cursor-pointer transition-all"
+                    >
+                      <UserMinusIcon className="h-4 w-4" />
+                    </button>
+                  </>
                 ) : (
-                  <MicOffIcon className="h-4 w-4 text-rose-500" />
-                )}
-                {p.videoEnabled ? (
-                  <VideoIcon className="h-4 w-4 text-slate-600" />
-                ) : (
-                  <VideoOffIcon className="h-4 w-4 text-rose-500" />
+                  <>
+                    <span className="relative flex items-center">
+                      {p.audioEnabled ? (
+                        <MicIcon className="h-4 w-4 text-slate-600" />
+                      ) : (
+                        <MicOffIcon className="h-4 w-4 text-rose-500" />
+                      )}
+                      {p.audioLocked && (
+                        <LockIcon className="w-2.5 h-2.5 absolute -top-1 -right-1 bg-slate-900 text-white rounded-full p-0.5" />
+                      )}
+                    </span>
+                    <span className="relative flex items-center">
+                      {p.videoEnabled ? (
+                        <VideoIcon className="h-4 w-4 text-slate-600" />
+                      ) : (
+                        <VideoOffIcon className="h-4 w-4 text-rose-500" />
+                      )}
+                      {p.videoLocked && (
+                        <LockIcon className="w-2.5 h-2.5 absolute -top-1 -right-1 bg-slate-900 text-white rounded-full p-0.5" />
+                      )}
+                    </span>
+                  </>
                 )}
               </div>
             </div>

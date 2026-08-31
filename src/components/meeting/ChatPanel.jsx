@@ -23,7 +23,7 @@ const ChatPanel = ({
 
   if (!isOpen) return null;
   return (
-    <aside className="w-full sm:w-80 bg-white border-1 border-slate-200 flex flex-col z-30 shadow-2xl animate-in slide-in-from-right duration-200">
+    <aside className="fixed inset-0 sm:relative sm:inset-auto w-full sm:w-80 bg-white border-l border-slate-200 flex flex-col z-30 shadow-2xl animate-in slide-in-from-right duration-200">
       {/* Header  */}
       <div className="p-4 border-b border-slate-200 flex items-center justify-between  ">
         <h3 className="font-medium text-slate-900 text-base flex items-center gap-2">

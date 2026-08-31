@@ -5,7 +5,7 @@ const SessionChatTab = ({ messages = [] }) => {
   if (messages.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-slate-400 text-sm py-12">
-        <MessageSquareIcon classname="w-8 h-8 mb-2 text-slate-300" />
+        <MessageSquareIcon className="w-8 h-8 mb-2 text-slate-300" />
         <p>No messages yet. Be the first to start the conversation.</p>
       </div>
     );

@@ -5,12 +5,14 @@ import {
   KeyboardIcon,
   ArrowRightIcon,
 } from 'lucide-react';
-import { dummyStats, dummyUser } from '../assets/asset';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { useUser } from '@clerk/react';
+import { useUser, useAuth } from '@clerk/react';
+import api from '../config/api.js';
+
 const Dashboard = () => {
-  const stats = dummyStats;
+  const [stats, setStats] = useState(null);
+  const { isLoaded, isSignedIn, getToken } = useAuth();
   const { user } = useUser();
   const userName = user?.fullName || user?.firstName || 'User';
   const userEmail =
@@ -19,67 +21,95 @@ const Dashboard = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [joinId, setJoinId] = useState('');
+
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const handleCreateMeeting = () => {
-    setIsCreating(true);
-    const chars = 'abcdefghijklmnopqrstuvwxyz';
-    const seg = () =>
-      Array.from(
-        { length: 3 },
-        () => chars[Math.floor(Math.random() * chars.length)]
-      ).join('');
-    const newMeetingId = `${seg()}-${seg()}-${seg()}`;
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!isLoaded || !isSignedIn) return;
+      try {
+        const token = await getToken();
+        const { data } = await api.get('/api/meetings/stats', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setStats(data);
+      } catch (error) {
+        toast.error(error.response?.data?.error || error.message);
+      }
+    };
+    fetchStats();
+    const onFocus = () => fetchStats();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [isLoaded, isSignedIn, getToken]);
 
-    setTimeout(() => {
+  const handleCreateMeeting = async () => {
+    if (!isLoaded || !isSignedIn) return;
+    setIsCreating(true);
+    try {
+      const token = await getToken();
+      const res = await api.post(
+        '/api/meetings',
+        { title: `${userName}'s Meeting` },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Meeting Created');
+      navigate(`/meeting/${res.data.meeting.meetingId}`);
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to create meeting');
+    } finally {
       setIsCreating(false);
-      toast.success('Meeting Created!');
-      navigate(`/meeting/${newMeetingId}`);
-    }, 400);
+    }
   };
 
-  const handleJoinMeeting = (e) => {
+  const handleJoinMeeting = async (e) => {
     e.preventDefault();
     const cleanId = joinId.trim();
     if (!/^[a-z]{3}(?:-[a-z]{3}){2}$/.test(cleanId)) {
-      toast.error('Please enter a meeting ID');
+      toast.error('Please enter a valid meeting ID');
       return;
     }
-    toast.success('Meeting Joined!');
-    navigate(`/meeting/${cleanId}`);
+    try {
+      const token = await getToken();
+      await api.get(`/api/meetings/${cleanId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      navigate(`/meeting/${cleanId}`);
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to join meeting');
+    }
   };
+
   return (
-    <div className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-12 flex flex-col justify-center">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center ">
-        {/* Left column - Actions */}
-        <div className="lg:col-span-7 space-y-8">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3.5 pr-6 py-2 rounded-full bg-white/25 text-xs font-medium">
-              <ShieldCheckIcon size={16} />
+    <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-8 lg:py-12 flex flex-col justify-center">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+        {/* Left column */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3.5 pr-5 py-2 rounded-full bg-white/25 text-xs font-medium">
+              <ShieldCheckIcon size={14} />
               Secure Peer-to-Peer Encryption
             </div>
-            <h1 className="text-4xl sm:text-5xl text-slate-800 leading-tight font-medium">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl text-slate-800 leading-tight font-medium">
               High Quality Video Calls.
               <br />
-              <span className="text-primary">Built for everyone .</span>
+              <span className="text-primary">Built for everyone.</span>
             </h1>
-            <p className="text-slate-700 text-base sm:text-lg max-w-xl leading-relaxed">
+            <p className="text-slate-700 text-sm sm:text-base max-w-xl leading-relaxed">
               Connect, collaborate, and celebrate from anywhere with ultra-low
               latency video, screen sharing, and real-time chat.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2 ">
+            <div className="flex flex-col sm:flex-row items-stretch gap-3 pt-2">
               <button
                 disabled={isCreating}
                 onClick={handleCreateMeeting}
-                className="cursor-pointer bg-primary hover:bg-primary-hover text-white font-medium px-6 py-3.5 rounded-full shadow-md shadow-primary/20 flex items-center justify-center gap-2.5 transition-all disabled:opacity-50"
+                className="cursor-pointer bg-primary hover:bg-primary-hover text-white font-medium px-6 py-3 rounded-full shadow-md shadow-primary/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 text-sm"
               >
-                <PlusIcon className="w-5 h-5" />
+                <PlusIcon className="w-4 h-4" />
                 <span>{isCreating ? 'Creating...' : 'New Meeting'}</span>
               </button>
               <form
@@ -87,43 +117,42 @@ const Dashboard = () => {
                 className="flex-1 flex items-center gap-2"
               >
                 <div className="relative flex-1">
-                  <KeyboardIcon className="w-5 h-5 text-primary/90 absolute left-4 top-1/2 -translate-y-1/2" />
+                  <KeyboardIcon className="w-4 h-4 text-primary/90 absolute left-4 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={joinId}
                     placeholder="Enter Meeting Code (e.g. abc-def-ghi)"
-                    onChange={(e) => {
-                      setJoinId(e.target.value);
-                    }}
-                    className="w-full bg-white/75 border border-primary-primary/80 focus:border-primary/60 focus:ring-1 focus:ring-primary/60 rounded-full pl-12 pr-4 py-3.5 text-sm text-slate-800 placeholder-slate-400 outline-none transition-all"
+                    onChange={(e) => setJoinId(e.target.value)}
+                    className="w-full bg-white/75 border border-slate-200 focus:border-primary/60 focus:ring-1 focus:ring-primary/60 rounded-full pl-11 pr-4 py-3 text-sm text-slate-800 placeholder-slate-400 outline-none transition-all"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={!joinId.trim()}
-                  className="bg-slate-900 hover:bg-slate-800 disabled:opacity-40 disabled:hiver:bg-slate-900 text-white font-medium px-6 py-3.5 rounded-full transition-all flex items-center justify-center cursor-pointer shadow-xs"
+                  className="bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-white font-medium px-5 py-3 rounded-full transition-all flex items-center justify-center gap-1 cursor-pointer text-sm shrink-0"
                 >
                   <span>Join</span>
-                  <ArrowRightIcon />
+                  <ArrowRightIcon className="w-4 h-4" />
                 </button>
               </form>
             </div>
           </div>
         </div>
-        {/* RIght Column - Hero Graphic and Clock Card  */}
-        <div className="lg:col-span-5 flex flex-col items-center justify-center space-y-4 ">
-          <div className="w-full bg-white/25 backdrop-blur rounded-4xl p-8 border  border-slate-200 text-center space-y-6 relative overflow-hidden">
+
+        {/* Right column - Clock Card */}
+        <div className="lg:col-span-5 flex flex-col items-center justify-center">
+          <div className="w-full bg-white/25 backdrop-blur rounded-3xl p-5 sm:p-8 border border-slate-200 text-center space-y-4 relative overflow-hidden">
             <div className="space-y-1">
-              <p className="mb-5 text-xl text-left">
+              <p className="text-base sm:text-xl text-left">
                 Hi, <span className="font-medium">{userName}</span>
               </p>
-              <h2 className="text-4xl xl:text-7xl my-4 text-slate-900 tracking-wide">
+              <h2 className="text-4xl sm:text-5xl xl:text-7xl my-2 sm:my-4 text-slate-900 tracking-wide">
                 {currentTime.toLocaleTimeString([], {
                   hour: '2-digit',
                   minute: '2-digit',
                 })}
               </h2>
-              <p className="font-medium tracking-wider text-primary">
+              <p className="font-medium tracking-wide text-primary text-xs sm:text-sm">
                 {currentTime.toLocaleDateString(undefined, {
                   weekday: 'long',
                   month: 'short',
@@ -133,25 +162,31 @@ const Dashboard = () => {
               </p>
             </div>
             <div className="pt-4 border-t border-white/30 text-sm text-slate-600">
-              <div className="flex items-center justify-between py-6 px-4">
-                <p>
+              <div className="flex flex-wrap items-center justify-between gap-2 py-3 px-2 sm:px-4">
+                <p className="text-xs sm:text-sm truncate max-w-[65%]">
                   Logged in as:{' '}
-                  <span className="text-slate-900"> {userEmail} </span>
+                  <span className="text-slate-900 font-medium">
+                    {userEmail}
+                  </span>
                 </p>
                 <span
-                  className={`px-4 py-1 rounded-full font-semibold text-xs uppercase ${stats?.plan === 'premium' ? 'bg-blue-700 text-white' : 'bg-white/70 text-slate-800'} `}
+                  className={`px-3 py-1 rounded-full font-semibold text-xs uppercase shrink-0 ${
+                    stats?.plan === 'premium'
+                      ? 'bg-blue-700 text-white'
+                      : 'bg-white/70 text-slate-800'
+                  }`}
                 >
                   {stats?.plan || 'Free'}
                 </span>
               </div>
               {stats && (
-                <div className="w-full bg-white/50 rounded-2xl px-5 py-4 border  border-slate-100">
-                  <div className="flex items-center justify-between text-sm">
+                <div className="w-full bg-white/50 rounded-2xl px-4 py-3 border border-slate-100">
+                  <div className="flex items-center justify-between text-xs sm:text-sm gap-2">
                     <span>Monthly Meetings</span>
                     <span className="text-xs text-slate-600 font-mono">
                       {stats.monthlyLimit
                         ? `${stats.monthlyCount}/${stats.monthlyLimit} Used`
-                        : `${stats.monthlyCount} Created (Unlimited) `}
+                        : `${stats.monthlyCount} Created (Unlimited)`}
                     </span>
                   </div>
                 </div>

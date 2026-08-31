@@ -1,33 +1,53 @@
 import React from 'react';
 import { CalendarIcon, UserIcon, MessageSquareIcon } from 'lucide-react';
+
 const SessionCard = ({
   session,
-  onSessionDetails,
+  isHost,
   onRejoin,
   onOpenDetails,
+  isRejoining,
+  isViewingDetails,
 }) => {
   const isEnded = session.status === 'ended';
+  const canRejoin = !isEnded || isHost;
+
   return (
     <div className="bg-white/70 backdrop-blur rounded-3xl p-6 transition-all flex flex-col justify-between space-y-5 border border-slate-100/60 shadow-xs">
+      {/* Session information */}
       <div className="space-y-3">
+        {/* ID + Status */}
         <div className="flex items-center justify-between">
           <span className="text-xs font-mono text-slate-500 font-medium bg-slate-500/5 px-2.5 py-1 rounded-md">
             ID: {session.meetingId}
           </span>
+
           <span
-            className={`text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 ${isEnded ? 'bg-slate-500/5 text-slate-500 ' : 'bg-emerald-500/5 text-emerald-500 '}`}
+            className={`text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 ${
+              isEnded
+                ? 'bg-slate-500/5 text-slate-500'
+                : 'bg-emerald-500/5 text-emerald-500'
+            }`}
           >
             <span
-              className={`size-1.5 rounded-full ${isEnded ? 'bg-slate-400' : 'bg-emerald-500'}`}
+              className={`size-1.5 rounded-full ${
+                isEnded ? 'bg-slate-400' : 'bg-emerald-500'
+              }`}
             />
+
             {isEnded ? 'Ended' : 'Active'}
           </span>
         </div>
+
+        {/* Title */}
         <h3 className="text-xl font-medium text-slate-900 truncate">
           {session.title || 'Instant Meeting'}
         </h3>
+
+        {/* Date */}
         <p className="flex items-center gap-1.5 text-xs text-slate-500">
-          <CalendarIcon className="w-3.5 h-3.5 text-slate-400 " />
+          <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
+
           {new Date(session.createdAt).toLocaleDateString(undefined, {
             month: 'short',
             day: 'numeric',
@@ -37,11 +57,12 @@ const SessionCard = ({
           })}
         </p>
       </div>
-      {/* Stats Row  */}
 
+      {/* Stats */}
       <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-300/30">
         <div className="flex items-center gap-2 text-xs bg-slate-500/5 p-2.5 rounded-xl">
           <UserIcon className="w-4 h-4 text-primary shrink-0" />
+
           <span className="flex items-center gap-1">
             <strong className="font-semibold text-slate-900">
               {session.participants?.length || 0}
@@ -49,8 +70,10 @@ const SessionCard = ({
             participants
           </span>
         </div>
+
         <div className="flex items-center gap-2 text-xs bg-slate-500/5 p-2.5 rounded-xl">
           <MessageSquareIcon className="w-4 h-4 text-primary shrink-0" />
+
           <span className="flex items-center gap-1">
             <strong className="font-semibold text-slate-900">
               {session.messages?.length || 0}
@@ -59,20 +82,42 @@ const SessionCard = ({
           </span>
         </div>
       </div>
-      {/* Actions  */}
+
+      {/* Actions */}
       <div className="flex items-center justify-between gap-3 pt-2">
+        {/* View Details */}
         <button
           onClick={() => onOpenDetails(session.id)}
-          className="w-full bg-slate-400/10 hover-bg-slate-400/20 text-slate-800 font-medium py-2.5 px-4 rounded-full text-xs transition-all cursor-pointer text-center "
+          disabled={isViewingDetails || isRejoining}
+          className="w-full bg-slate-400/10 hover:bg-slate-400/20 text-slate-800 font-medium py-2.5 px-4 rounded-full text-xs transition-all cursor-pointer text-center disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          View Details
+          {isViewingDetails ? (
+            <span className="flex items-center justify-center gap-2">
+              <span className="size-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+              Loading...
+            </span>
+          ) : (
+            'View Details'
+          )}
         </button>
-        {!isEnded && (
+
+        {/* Rejoin */}
+        {canRejoin && (
           <button
             onClick={() => onRejoin(session.meetingId)}
-            className="w-full bg-primary hover:bg-primary-hover text-white font-medium py-2.5 px-4 rounded-full text-xs transition-all shadow-xs cursor-pointer text-center"
+            disabled={isRejoining || isViewingDetails}
+            className="w-full bg-primary hover:bg-primary-hover text-white font-medium py-2.5 px-4 rounded-full text-xs transition-all shadow-xs cursor-pointer text-center disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Re-Join
+            {isRejoining ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="size-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Joining...
+              </span>
+            ) : isEnded ? (
+              'Reactivate & Re-Join'
+            ) : (
+              'Re-Join'
+            )}
           </button>
         )}
       </div>

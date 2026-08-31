@@ -7,6 +7,7 @@ const VideoGrid = ({
   remoteUsers,
   audioEnabled,
   videoEnabled,
+  isScreenSharing = false,
 }) => {
   const totalParticipants = 1 + remoteUsers.length;
 
@@ -22,9 +23,9 @@ const VideoGrid = ({
   };
 
   return (
-    <div className="flex-1 w-full flex items-center justify-center p-4 overflow-y-auto ">
+    <div className="flex-1 w-full flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
       <div
-        className={`w-full grid gap-4 ${getGridClass()} aspect-video max-h-[calc(100vh-140px)] transition-all duration-300 `}
+        className={`w-full grid gap-2 sm:gap-4 ${getGridClass()} max-h-[calc(100vh-120px)] sm:max-h-[calc(100vh-140px)] transition-all duration-300`}
       >
         {/* Local User file  */}
         <VideoTile
@@ -33,6 +34,7 @@ const VideoGrid = ({
           isLocal={true}
           audioEnabled={audioEnabled}
           videoEnabled={videoEnabled}
+          isScreenSharing={isScreenSharing}
         />
         {/* Remote user tiles  */}
         {remoteUsers.map((remote) => (
@@ -43,6 +45,7 @@ const VideoGrid = ({
             isLocal={false}
             audioEnabled={remote.audioEnabled}
             videoEnabled={remote.videoEnabled}
+            isScreenSharing={remote.isScreenSharing}
           />
         ))}
       </div>

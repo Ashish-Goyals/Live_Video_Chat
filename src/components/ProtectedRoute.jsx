@@ -7,9 +7,8 @@ const ProtectedRoute = () => {
   const { isSignedIn, isLoaded } = useAuth();
 
   if (!isLoaded) {
-    return <Loader text="Authenticating......." />;
+    return <Loader text="Authenticating......." fullScreen />;
   }
-
   return isSignedIn ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
